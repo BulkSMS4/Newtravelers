@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Click Dashboard</title>
+  <title>Travel News Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background:#f4f4f4; padding:20px; }
-    table { width:100%; background:white; border-collapse:collapse; }
+    body { font-family: Arial; margin:0; padding:0; background:#f0f0f0; }
+    header { background:#2196F3; color:white; padding:15px; text-align:center; }
+    h1 { margin:0; }
+    #map { height:400px; width:100%; margin-bottom:20px; }
+    table { width:95%; margin:0 auto 40px; background:white; border-collapse:collapse; }
     th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
     th { background:#111; color:white; }
   </style>
+  <!-- Leaflet CSS for maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+eF0S0vDhPp+cmVf0u0rE0NvXxCjM6d8pE6m0kF3A=" crossorigin=""/>
 </head>
 <body>
 
-<h2>📊 Click Dashboard</h2>
+<header>
+  <h1>🌍 Travel News Dashboard</h1>
+</header>
+
+<div id="map"></div>
 
 <table>
   <thead>
     <tr>
-      <th>Map</th>
+      <th>Map Link</th>
       <th>Address</th>
       <th>Device</th>
       <th>Time</th>
@@ -26,9 +36,13 @@
   <tbody id="rows"></tbody>
 </table>
 
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // Leaflet JS
+  import L from "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet-src.esm.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5zWUvl64s6wAjjeXd0mCUyhMEdzg_MmM",
@@ -42,29 +56,46 @@
 
   const rows = document.getElementById("rows");
 
+  // Initialize Leaflet map
+  const map = L.map('map').setView([20,0], 2); // World view
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
   try {
-    const q = query(collection(db, "clicks"), orderBy("time", "desc"));
+    const q = query(collection(db, "clicks"), orderBy("time","desc"));
     const snap = await getDocs(q);
 
     if (snap.empty) {
-      rows.innerHTML = "<tr><td colspan='4'>No data yet</td></tr>";
+      rows.innerHTML = "<tr><td colspan='4'>No clicks yet</td></tr>";
     }
 
     snap.forEach(doc => {
       const d = doc.data();
+
+      // Add table row
       rows.innerHTML += `
         <tr>
           <td><a target="_blank" href="https://maps.google.com/?q=${d.latitude},${d.longitude}">View</a></td>
           <td>${d.address || "Unknown"}</td>
-          <td>${(d.userAgent || "").substring(0, 60)}</td>
+          <td>${(d.userAgent || "").substring(0,60)}</td>
           <td>${new Date(d.time).toLocaleString()}</td>
         </tr>`;
+
+      // Add marker on map
+      L.marker([d.latitude, d.longitude])
+        .addTo(map)
+        .bindPopup(`<b>${d.address || "Unknown"}</b><br>${new Date(d.time).toLocaleString()}`);
     });
 
-  } catch (err) {
+  } catch(err) {
     rows.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
     console.error(err);
   }
 </script>
+
+<!-- Leaflet JS (ES module fallback) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet-src.esm.js"></script>
+
 </body>
 </html>
