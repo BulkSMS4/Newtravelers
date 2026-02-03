@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>Click Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background:#f4f4f4; }
+    body { font-family: Arial; background:#f4f4f4; padding:20px; }
     table { width:100%; background:white; border-collapse:collapse; }
-    th, td { padding:10px; border-bottom:1px solid #ddd; }
+    th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
     th { background:#111; color:white; }
   </style>
 </head>
@@ -28,36 +28,43 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
+    apiKey: "AIzaSyB5zWUvl64s6wAjjeXd0mCUyhMEdzg_MmM",
+    authDomain: "usahackersland.firebaseapp.com",
+    projectId: "usahackersland",
+    storageBucket: "usahackersland.appspot.com",
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
   const rows = document.getElementById("rows");
-  const snap = await getDocs(collection(db, "clicks"));
 
-  snap.forEach(doc => {
-    const d = doc.data();
-    rows.innerHTML += `
-      <tr>
-        <td>
-          <a target="_blank"
-             href="https://maps.google.com/?q=${d.latitude},${d.longitude}">
-             View
-          </a>
-        </td>
-        <td>${d.address}</td>
-        <td>${d.userAgent}</td>
-        <td>${d.time}</td>
-      </tr>`;
-  });
+  try {
+    const q = query(collection(db, "clicks"), orderBy("time", "desc"));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      rows.innerHTML = "<tr><td colspan='4'>No data yet</td></tr>";
+    }
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      rows.innerHTML += `
+        <tr>
+          <td><a target="_blank" href="https://maps.google.com/?q=${d.latitude},${d.longitude}">View</a></td>
+          <td>${d.address || "Unknown"}</td>
+          <td>${(d.userAgent || "").substring(0, 60)}</td>
+          <td>${new Date(d.time).toLocaleString()}</td>
+        </tr>`;
+    });
+
+  } catch (err) {
+    rows.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
+    console.error(err);
+  }
 </script>
-
 </body>
 </html>
