@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background:#f4f4f4; }
+    table { width:100%; background:white; border-collapse:collapse; }
+    th, td { padding:10px; border-bottom:1px solid #ddd; }
+    th { background:#111; color:white; }
+  </style>
+</head>
+<body>
+
+<h2>📊 Click Dashboard</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Map</th>
+      <th>Address</th>
+      <th>Device</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const rows = document.getElementById("rows");
+  const snap = await getDocs(collection(db, "clicks"));
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    rows.innerHTML += `
+      <tr>
+        <td>
+          <a target="_blank"
+             href="https://maps.google.com/?q=${d.latitude},${d.longitude}">
+             View
+          </a>
+        </td>
+        <td>${d.address}</td>
+        <td>${d.userAgent}</td>
+        <td>${d.time}</td>
+      </tr>`;
+  });
+</script>
+
+</body>
+</html>
